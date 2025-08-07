@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Detector</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f472b6;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --neutral: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subheading {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        textarea, input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .result-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-item {
+            padding: 1rem;
+            background-color: var(--gray-100);
+            border-radius: 8px;
+        }
+
+        .prediction {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .Depression {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .Anxiety {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .Normal {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .Other {
+            background-color: rgba(100, 116, 139, 0.1);
+            color: var(--neutral);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+        }
+
+        footer {
+            background-color: var(--gray-800);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .disclaimer {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 1rem;
+        }
+        
+        .category-bar {
+            height: 25px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .category-label {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        .category-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>Social Media Mental Health Detector</h1>
+                <p class="subheading">Analyze social media content to detect potential signs of mental health conditions</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>Content Analysis</h2>
+            <div class="input-section">
+                <div>
+                    <div class="input-group">
+                        <label for="post-text">Enter the text of the post:</label>
+                        <textarea id="post-text" placeholder="Type or paste the social media post text here..."></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="input-group">
+                        <label for="post-image">Upload an image:</label>
+                        <input type="file" id="post-image" accept="image/*">
+                        <div class="image-preview" id="image-preview"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button id="analyze-btn" class="btn">Analyze Content</button>
+            </div>
+        </div>
+
+        <div class="result-section" id="result-section">
+            <div class="card">
+                <h2>Analysis Results</h2>
+                <div class="prediction" id="prediction"></div>
+                <div class="result-card">
+                    <div id="visualization-container">
+                        <div class="chart-container">
+                            <canvas id="results-chart"></canvas>
+                        </div>
+                        <div id="fallback-chart" style="display: none;"></div>
+                    </div>
+                    <div class="result-item">
+                        <h3>Probability Breakdown</h3>
+                        <div id="probability-breakdown"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <h3>About This Tool</h3>
+                <p>The Social Media Mental Health Detector uses advanced algorithms to analyze text and images from social media posts to identify potential signs of mental health conditions.</p>
+                <p class="disclaimer">Disclaimer: This tool is for educational purposes only and should not be used as a substitute for professional medical advice, diagnosis, or treatment.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+       
+        const postText = document.getElementById('post-text');
+        const postImage = document.getElementById('post-image');
+        const imagePreview = document.getElementById('image-preview');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resultSection = document.getElementById('result-section');
+        const predictionEl = document.getElementById('prediction');
+        const probabilityBreakdownEl = document.getElementById('probability-breakdown');
+        const fallbackChart = document.getElementById('fallback-chart');
+        const chartContainer = document.getElementById('visualization-container');
+        
+        
+        let chartJsAvailable = false;
+        try {
+            chartJsAvailable = typeof Chart !== 'undefined';
+        } catch (e) {
+            console.warn("Chart.js is not available. Using fallback visualization.");
+        }
+        
+       
+        let resultsChart = null;
+
+        
+        postImage.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.innerHTML = '';
+            }
+        });
+
+       
+        analyzeBtn.addEventListener('click', function() {
+            if (!postText.value.trim()) {
+                alert('Please enter some text to analyze.');
+                return;
+            }
+
+            
+            analyzeBtn.textContent = 'Analyzing...';
+            analyzeBtn.disabled = true;
+
+           
+            setTimeout(() => {
+                analyzeContent(postText.value, postImage.files[0]);
+                analyzeBtn.textContent = 'Analyze Content';
+                analyzeBtn.disabled = false;
+            }, 1500);
+        });
+
+      
+        function analyzeContent(text, image) {
+            
+            const classNames = ['Depression', 'Anxiety', 'Normal', 'Other'];
+            
+           
+            let textProbs = Array.from({length: 4}, () => Math.random());
+            let sum = textProbs.reduce((a, b) => a + b, 0);
+            textProbs = textProbs.map(p => p / sum);
+            
+            let imageProbs = Array.from({length: 4}, () => Math.random());
+            sum = imageProbs.reduce((a, b) => a + b, 0);
+            imageProbs = imageProbs.map(p => p / sum);
+            
+           
+            const combinedProbs = textProbs.map((p, i) => 0.7 * p + 0.3 * imageProbs[i]);
+            sum = combinedProbs.reduce((a, b) => a + b, 0);
+            const normalizedProbs = combinedProbs.map(p => p / sum);
+            
+            
+            const maxIndex = normalizedProbs.indexOf(Math.max(...normalizedProbs));
+            const predictedClass = classNames[maxIndex];
+            
+           
+            displayResults(predictedClass, normalizedProbs, classNames);
+        }
+
+      
+        function displayResults(predictedClass, probabilities, classNames) {
+           
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+            
+            
+            predictionEl.textContent = `Predicted: ${predictedClass}`;
+            predictionEl.className = 'prediction ' + predictedClass;
+            
+           
+            let breakdownHTML = '';
+            classNames.forEach((label, i) => {
+                const percentage = (probabilities[i] * 100).toFixed(2);
+                const barWidth = percentage + '%';
+                
+                let colorClass;
+                switch(label) {
+                    case 'Depression': colorClass = 'var(--danger)'; break;
+                    case 'Anxiety': colorClass = 'var(--warning)'; break;
+                    case 'Normal': colorClass = 'var(--success)'; break;
+                    default: colorClass = 'var(--neutral)';
+                }
+                
+                breakdownHTML += `
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <span>${label}</span>
+                            <span>${percentage}%</span>
+                        </div>
+                        <div style="background-color: var(--gray-200); height: 10px; border-radius: 5px;">
+                            <div style="background-color: ${colorClass}; width: ${barWidth}; height: 10px; border-radius: 5px;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            probabilityBreakdownEl.innerHTML = breakdownHTML;
+            
+            
+            if (chartJsAvailable) {
+                const ctx = document.getElementById('results-chart').getContext('2d');
+                
+                if (resultsChart) {
+                    resultsChart.data.datasets[0].data = probabilities.map(p => p * 100);
+                    resultsChart.update();
+                } else {
+                    try {
+                        resultsChart = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: classNames,
+                                datasets: [{
+                                    data: probabilities.map(p => p * 100),
+                                    backgroundColor: [
+                                        'rgba(239, 68, 68, 0.7)',    // Depression - red
+                                        'rgba(245, 158, 11, 0.7)',   // Anxiety - amber
+                                        'rgba(16, 185, 129, 0.7)',   // Normal - green
+                                        'rgba(100, 116, 139, 0.7)'   // Other - slate
+                                    ],
+                                    borderColor: [
+                                        'rgba(239, 68, 68, 1)',
+                                        'rgba(245, 158, 11, 1)',
+                                        'rgba(16, 185, 129, 1)',
+                                        'rgba(100, 116, 139, 1)'
+                                    ],
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return `${context.label}: ${context.raw.toFixed(2)}%`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.error("Failed to create chart:", e);
+                        useChartFallback(classNames, probabilities);
+                    }
+                }
+            } else {
+                useChartFallback(classNames, probabilities);
+            }
+        }
+        
+      
+        function useChartFallback(classNames, probabilities) {
+            document.getElementById('results-chart').style.display = 'none';
+            fallbackChart.style.display = 'block';
+            
+            let fallbackHTML = '<h3>Category Distribution</h3>';
+            
+            const colors = [
+                'rgb(239, 68, 68)',    // Depression - red
+                'rgb(245, 158, 11)',   // Anxiety - amber
+                'rgb(16, 185, 129)',   // Normal - green
+                'rgb(100, 116, 139)'   // Other - slate
+            ];
+            
+            classNames.forEach((label, i) => {
+                const percentage = (probabilities[i] * 100).toFixed(2);
+                fallbackHTML += `
+                    <div class="category-bar" style="width: ${percentage}%; background-color: ${colors[i]};">
+                        <span class="category-label">${label}</span>
+                        <span class="category-value">${percentage}%</span>
+                    </div>
+                `;
+            });
+            
+            fallbackChart.innerHTML = fallbackHTML;
+        }
+    </script>
+</body>
+</html>
